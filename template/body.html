@@ -1,0 +1,83 @@
+{{ define "body" }}
+
+<div class="board-setup">
+    <div class="cell">
+        <label class="label"> OLT:
+        <select class="select-olt" name="hardware" required>
+            <option disabled>Выбери OLT в Лабе</option>
+            {{.HTML.HTML_Device}}
+        </select>
+        </label>
+    </div>
+    <div class="cell">
+        <label class="label">СЛОТ:
+            <select class="select" name="slot">
+                <option disabled>СЛОТ:</option>
+                {{.HTML.HTML_Slot}}
+            </select>
+        </label>
+    </div>
+    <div class="cell">
+        <label class="label">ПОРТ:
+            <select class="select"  name="port" >
+                <option disabled>ПОРТ:</option>
+                {{.HTML.HTML_Port}}
+            </select>
+        </label>
+    </div>
+
+    <div class="cell">
+        <label class="label">ONT:</label>
+        <input class="select" name="ont" value={{.HTML.HTML_Ont}} required >
+    </div>
+</div>
+
+
+<div class="board-setup">
+    <div class="cell">
+        <label class="label">VLAN TR069:
+        <select class="select" name="vlan_tr069" required>
+            <option disabled>TR069</option>
+            {{.HTML.HTML_VlanTr069}}
+        </select>
+        </label>
+    </div>
+    <div class="cell">
+        <label class="label">VLAN PPPoE:
+            <select class="select" name="vlan_pppoe" required>
+                <option disabled>PPPoE</option>
+                {{.HTML.HTML_VlanPPPoE}}
+            </select>
+            </label>
+    </div>
+    <div class="cell">
+        <label class="label">VLAN IPTV:
+            <select class="select" name="vlan_iptv" required>
+            {{.HTML.HTML_VlanIPTV}}
+            </select>
+        </label>
+    </div>
+    <div class="cell">
+        <label class="label">VLAN IMS:
+            <select class="select" name="vlan_ims" required>
+                {{.HTML.HTML_VlanIMS}}
+            </select>
+            </label>
+    </div>
+</div>
+
+
+<div class="board-setup">
+    <div class="cell">
+
+    </div>
+    <div>
+       
+    </div>
+    <div></div>
+    <div>
+        <button class="btn-body" type="submit" formaction="/worker" value="conf" name="btn-body" formmethod="POST">Настроить</button>
+    </div>
+</div>
+
+{{ end }}

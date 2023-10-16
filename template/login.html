@@ -1,0 +1,33 @@
+{{ define "login"}}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Refresh" content="1000" />
+    <link rel="stylesheet" href="css/login.css">
+    <title>Pinger</title>
+</head>
+<body class="body">
+    <form action="/signin" method="POST">
+<div class="form">
+    <div class="title">Pinger</div>
+    <div class="subtitle">Вход в аккаунт</div>
+    <div class="input-container ic1">
+      <input id="firstname" class="input" name="username" type="text" placeholder=" " />
+      <div class="cut2"></div>
+      <label for="firstname" class="placeholder">LOGIN</label>
+    </div>
+    <div class="input-container ic2">
+      <input id="lastname" class="input" name="password" type="password" placeholder=" " />
+      <div class="cut"></div>
+      <label for="lastname" class="placeholder">PASSWORD</label>
+    </div>
+      <button type="text" class="submit">Вход</button>
+  </div>
+</form>
+</body>
+</html>
+{{end}}

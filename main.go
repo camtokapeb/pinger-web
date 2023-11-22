@@ -5,6 +5,9 @@ package main
 // https://codepen.io/ricardoolivaalonso/pen/VwMvbdO
 // https://habr.com/ru/company/ruvds/blog/559816/
 
+//read me
+//https://github.com/eliben/code-for-blog/blob/master/2021/go-rest-servers/auth/basic-sample/https-basic-auth-server.go
+
 import (
 	"crypto/md5"
 	"flag"
@@ -25,17 +28,17 @@ type Data struct {
 
 var conf Data
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func login(w http.ResponseWriter, r *http.Request) {
 	// Главная страница Отрисовка главной формы web-формы
 	InfoLogger.Printf("[%s], Отрисовка login", r.RemoteAddr)
 	tmpl, err := template.ParseFiles("template/login.html")
-
-	if r.URL.Path != "/" {
+	log.Println("LOGIN:", r.URL.Path)
+	if r.URL.Path != "/login" {
 		http.NotFound(w, r)
 		return
 	}
 	if err != nil {
-		InfoLogger.Printf("Error parsing: %s", err)
+		log.Printf("Error parsing: %s", err)
 	}
 	tmpl.ExecuteTemplate(w, "login", conf)
 	conf = Data{}
@@ -52,6 +55,7 @@ type Session struct {
 	Username string // Логин, под которым вошёл пользователь
 	Name     string // Описание пользователя
 	Expiry   time.Time
+	Site     string
 	HTML     HTML
 }
 
@@ -100,7 +104,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	// и, если он совпадает с паролем, который мы получили, то мы можем двигаться дальше
 	// if NOT, тогда мы возвращаем "Unauthorized" status, а лучше перенаправляем на страницу ввода пароля
 	if !ok || expectedPassword.Password != creds.Password {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		fmt.Println(">>> PASSWORD INCORRECT!", creds.Password)
 		return
 	}
@@ -126,11 +130,11 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		Value:   sessionToken,
 		Expires: expiresAt,
 	})
-	http.Redirect(w, r, "/setup", http.StatusSeeOther)
+	http.Redirect(w, r, "/showping", http.StatusSeeOther)
 }
 
 // we'll use this method later to determine if the session has expired
-func (s Session) isExpired() bool {
+func (s *Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
 }
 
@@ -183,6 +187,8 @@ func DeviceConfigure(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("LOGOUT!")
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -210,22 +216,34 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/favicon.ico")
+	w.WriteHeader(401)
+
+}
+
+
+
 func run() {
 
-	port := flag.String("port", "8081", "TCP port")
+	port := flag.String("port", "8082", "TCP port")
 	flag.Parse()
 	accounts = ReadConfig()
-	//fmt.Println(accounts)
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", МиддлеВарь(Example))           // Главная страничка
+	mux.HandleFunc("/login", login)                    // Форма для ввода логина и пароля.
+	mux.HandleFunc("/check", checkLogin)               // Проверка логина и пароля.
+	mux.HandleFunc("/addHost", addHost)                // Добавить хосты для пингования.
+	mux.HandleFunc("/logout", Logout)                  // Очистить текщую сессию.
+	mux.HandleFunc("/showping", МиддлеВарь(Show_Ping)) // Таблица результатов пингования
+
+	
+
+	mux.HandleFunc("/favicon.ico", faviconHandler)
+
 	fileServer := http.FileServer(http.Dir("./css/"))
 	fileServer2 := http.FileServer(http.Dir("./js/"))
-	mux.HandleFunc("/", Login)        // Форма для ввода логина и пароля
-	mux.HandleFunc("/signin", Signin) // Проверка логина/пароля
-	mux.HandleFunc("/worker", Action)
-	mux.HandleFunc("/setup", Setup)
-	mux.HandleFunc("/logout", Logout)
-	//mux.HandleFunc("/test", Test)
-	mux.HandleFunc("/showping", Show_Ping)
 	mux.Handle("/css/", http.StripPrefix("/css", fileServer))
 	mux.Handle("/js/", http.StripPrefix("/js", fileServer2))
 
@@ -238,7 +256,8 @@ func run() {
 	}
 	log.Printf("starting server on %s", srv.Addr)
 	//https://medium.com/rungo/secure-https-servers-in-go-a783008b36da
-	err := srv.ListenAndServeTLS("./cert/localhost.crt", "./cert/localhost.key")
+	// openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout converter_key.pem -out converter_cert.pem
+	err := srv.ListenAndServeTLS("./cert/converter_cert.pem", "./cert/converter_key.pem")
 	log.Fatal(err)
 }
 

@@ -30,7 +30,7 @@ func ReadConfig() map[string]*Users {
 
 	users := make(map[string]*Users)
 
-	file, err := os.Open("assassin.conf")
+	file, err := os.Open("pinger.conf")
 	if err != nil {
 		panic(err)
 	}
@@ -46,9 +46,9 @@ func ReadConfig() map[string]*Users {
 			fmt.Println(e)
 			break
 		}
-		//fmt.Println(record)
+		//log.Println(record)
 		users[record[1]] = &Users{Password: string(record[0]), Name: record[2], Phone: record[3], Room: record[4], Privileges: record[5]}
 	}
-	//fmt.Println("MAPS:", users["user2"])
+	//log.Println("MAPS:", users["user1"])
 	return users
 }

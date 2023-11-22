@@ -7,15 +7,13 @@ import (
 )
 
 func Show_Ping(w http.ResponseWriter, r *http.Request) {
-	// Главная страница Отрисовка главной формы web-формы
+	// страница Отрисовка таблицы web-формы
 	InfoLogger.Printf("[%s], Отрисовка cтраницы результатов пингования", r.RemoteAddr)
-	tmpl, err := template.ParseFiles("template/show_ping.html")
-
+	tmpl, err := template.ParseFiles("template/showping/show_ping.html", "template/head.html", "template/navbar.html", "template/footer.html", "template/showping/content_table.html")
 	if err != nil {
 		InfoLogger.Printf("Error parsing: %s", err)
 		fmt.Println("Error parsing test")
 	}
-
 	type Hosts struct {
 		Date_time     string
 		Ip            string
@@ -23,7 +21,6 @@ func Show_Ping(w http.ResponseWriter, r *http.Request) {
 		Descriptor    string
 		Time_response float64
 	}
-
 	// Подключились к базе
 	db, _ := InitDB()
 	query := `select 
@@ -40,7 +37,6 @@ func Show_Ping(w http.ResponseWriter, r *http.Request) {
 		ErrorLogger.Printf("Не удалось выбрать данные из БД [%s]", err)
 	}
 	defer s.Close()
-
 	h := make([]Hosts, 0) // Объявим массив структур для выборки из базы
 	for s.Next() {
 		hs := Hosts{}
@@ -50,5 +46,5 @@ func Show_Ping(w http.ResponseWriter, r *http.Request) {
 		}
 		h = append(h, hs)
 	}
-	tmpl.ExecuteTemplate(w, "show_ping_list", h)
+	tmpl.ExecuteTemplate(w, "show_ping", h)
 }

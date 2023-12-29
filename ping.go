@@ -76,7 +76,6 @@ func pingator() {
 
 	InfoLogger.Printf("Start pinger!")
 
-	db, _ := InitDB()
 	timeout := 1000 // Timeout в миллисекундах
 
 	type hosts struct {
@@ -86,7 +85,7 @@ func pingator() {
 		descriptor string
 	}
 
-	r, err := Selector(db, "SELECT * FROM host")
+	r, err := Selector(DB, "SELECT * FROM host")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,10 +126,10 @@ func pingator() {
 				}
 
 				if a.id != 0 {
-					_, err := Insertor(db,
+					_, err := Insertor(DB,
 						fmt.Sprintf("INSERT INTO monitoring (date_time,host_id,status,time_response) VALUES ((datetime('now')),%d,%d,%f)", a.id, status, answ))
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal("Pinger>>", err)
 					}
 				}
 			}

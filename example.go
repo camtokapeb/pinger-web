@@ -2,11 +2,14 @@ package main
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 )
 
 func Example(w http.ResponseWriter, r *http.Request) {
 	// Главная страница Отрисовка главной формы web-формы
+
+	log.Println("EXAMPLE", sessions)
 	InfoLogger.Printf("[%s], Отрисовка login", r.RemoteAddr)
 	tmpl, err := template.ParseFiles("template/example.html", "template/head.html", "template/navbar.html", "template/content.html", "template/footer.html")
 

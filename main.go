@@ -10,6 +10,7 @@ package main
 
 import (
 	"crypto/md5"
+	"database/sql"
 	"flag"
 	"fmt"
 	"html/template"
@@ -18,7 +19,6 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
-	"github.com/google/uuid"
 )
 
 type Data struct {
@@ -29,7 +29,7 @@ type Data struct {
 var conf Data
 
 func login(w http.ResponseWriter, r *http.Request) {
-	// Главная страница Отрисовка главной формы web-формы
+	// Главная страница Отрисовка web-формы ввода логина и пароля
 	InfoLogger.Printf("[%s], Отрисовка login", r.RemoteAddr)
 	tmpl, err := template.ParseFiles("template/login.html")
 	log.Println("LOGIN:", r.URL.Path)
@@ -50,37 +50,22 @@ type Credentials struct {
 	Username string `json:"username"`
 }
 
-// Каждая сессия определяется именем пользователя, временем длительности сессии
-type Session struct {
-	Username string // Логин, под которым вошёл пользователь
-	Name     string // Описание пользователя
-	Expiry   time.Time
-	Site     string
-	HTML     HTML
+type Role struct {
+	//User_id     int32
+	Url         string
+	Description string
+	Template    string
 }
 
-type HTML struct {
-	HTML_Device     template.HTML
-	HTML_Devices    []string
-	HTML_DeviceIP   map[string]string
-	HTML_Slot       template.HTML
-	HTML_Slots      []string
-	HTML_Port       template.HTML
-	HTML_Ports      []string
-	HTML_Ont        template.HTML
-	HTML_Onts       []string
-	HTML_VlanTr069  template.HTML
-	HTML_VlanTr069s []string
-	HTML_VlanPPPoE  template.HTML
-	HTML_VlanPPPoEs []string
-	HTML_VlanIPTV   template.HTML
-	HTML_VlanIPTVs  []string
-	HTML_VlanIMS    template.HTML
-	HTML_VlanIMSs   []string
-	HTML_VlanvIMS   template.HTML
-	HTML_VlanvIMSs  []string
-	HTML_VlanCSM    template.HTML
-	HTML_VlanCSMs   []string
+// Каждая сессия определяется именем пользователя, временем длительности сессии и т.д.
+type Session struct {
+	Username string    // Логин, под которым вошёл пользователь
+	Name     string    // Описание пользователя
+	Token    string    // токен сессии
+	Expiry   time.Time // время завершения сессии
+	Site     string    // местоположение пользователя
+	Phone    string
+	Roles    []Role
 }
 
 // "Эта мапа для хранения сессии пользователя!"
@@ -91,99 +76,9 @@ func MD5(data string) string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(data)))
 }
 
-func Signin(w http.ResponseWriter, r *http.Request) {
-
-	var creds Credentials
-	creds.Username = r.FormValue("username")
-	creds.Password = MD5(r.FormValue("password"))
-	//fmt.Println("Мы ввели:", creds.Username, creds.Password, "Login:", accounts[creds.Username].Name, "Passwd:",accounts[creds.Username].Password )
-	// Из нашей мапы запрашиваем данные о пароле по логину, который ввёл пользователь в HTML форму
-	expectedPassword, ok := accounts[creds.Username]
-
-	// Если пароль у этого пользователя существует
-	// и, если он совпадает с паролем, который мы получили, то мы можем двигаться дальше
-	// if NOT, тогда мы возвращаем "Unauthorized" status, а лучше перенаправляем на страницу ввода пароля
-	if !ok || expectedPassword.Password != creds.Password {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		fmt.Println(">>> PASSWORD INCORRECT!", creds.Password)
-		return
-	}
-	// Создаём новый рандомный ключ сессии
-	sessionToken := uuid.NewString()
-	expiresAt := time.Now().Add(600 * time.Second)
-
-	// Устанавливаем токен в мапу сессий, вместе с пользователем, которого он представляет
-	sessions[sessionToken] = &Session{
-		Username: creds.Username,
-		Expiry:   expiresAt,
-	}
-
-	// Устанавливаем дефолтные значения влан для первоначальной отрисовки web формы
-	InitDefData(sessions[sessionToken])
-	UpdateHTML(sessions[sessionToken])
-
-	// Наконец, мы устанавливаем клиентский файл cookie для "session_token"
-	// в качестве токена сеанса, который мы только что сгенерировали
-	// мы также устанавливаем время истечения срока действия куки в "expiresAt" секунд
-	http.SetCookie(w, &http.Cookie{
-		Name:    "session_token",
-		Value:   sessionToken,
-		Expires: expiresAt,
-	})
-	http.Redirect(w, r, "/showping", http.StatusSeeOther)
-}
-
 // we'll use this method later to determine if the session has expired
 func (s *Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
-}
-
-func Welcome(w http.ResponseWriter, r *http.Request) {
-
-	// We can obtain the session token from the requests cookies, which come with every request
-	c, err := r.Cookie("session_token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			// Если куки не установлены, то это unauthorized status, поэтому снова предлагаем залогиниться
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			//w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		// For any other type of error, return a bad request status
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	sessionToken := c.Value
-	fmt.Println(sessionToken)
-	// We then get the name of the user from our session map, where we set the session token
-	userSession, exists := sessions[sessionToken]
-	if !exists {
-		// If the session token is not present in session map, return an unauthorized error
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		//w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	if userSession.isExpired() {
-		delete(sessions, sessionToken)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	// Finally, return the welcome message to the user
-	//w.Write([]byte(fmt.Sprintf("Welcome %s!", users[userSession.username].Name)))
-
-	InfoLogger.Printf("[%s], Отрисовка формы после залогинивания", r.RemoteAddr)
-	tmpl, err := template.ParseFiles("template/top.html")
-
-	if err != nil {
-		InfoLogger.Printf("Error parsing: %s", err)
-		fmt.Println("Error parsing test")
-	}
-	tmpl.ExecuteTemplate(w, "top", accounts[userSession.Username])
-}
-
-func DeviceConfigure(w http.ResponseWriter, r *http.Request) {
-
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -222,30 +117,38 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-
+var DB *sql.DB
+var err error
 
 func run() {
 
+	DB, err = sql.Open("sqlite3", "./base.db")
+	if err != nil {
+		log.Println("Ошибка подключения к БД", err.Error())
+		return
+	}
+	log.Println("Стартуем БД...")
+	createTable(DB)
 	port := flag.String("port", "8082", "TCP port")
 	flag.Parse()
 	accounts = ReadConfig()
-	mux := http.NewServeMux()
+	config := ReadConfigFromDB()
+	log.Println("CONFIG: ", config["user1"])
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/favicon.ico", faviconHandler)
 	mux.HandleFunc("/", МиддлеВарь(Example))           // Главная страничка
 	mux.HandleFunc("/login", login)                    // Форма для ввода логина и пароля.
 	mux.HandleFunc("/check", checkLogin)               // Проверка логина и пароля.
-	mux.HandleFunc("/addHost", addHost)                // Добавить хосты для пингования.
+	mux.HandleFunc("/addhost", МиддлеВарь(addhost))    // Форма для добавления ip хоста
+	mux.HandleFunc("/inputnewip", МиддлеВарь(addhost)) // Добавим хост, который будем пинговать
 	mux.HandleFunc("/logout", Logout)                  // Очистить текщую сессию.
 	mux.HandleFunc("/showping", МиддлеВарь(Show_Ping)) // Таблица результатов пингования
 
-	
-
-	mux.HandleFunc("/favicon.ico", faviconHandler)
-
-	fileServer := http.FileServer(http.Dir("./css/"))
-	fileServer2 := http.FileServer(http.Dir("./js/"))
-	mux.Handle("/css/", http.StripPrefix("/css", fileServer))
-	mux.Handle("/js/", http.StripPrefix("/js", fileServer2))
+	fileServer := http.FileServer(http.Dir("./static/css/"))
+	fileServer2 := http.FileServer(http.Dir("./static/js/"))
+	mux.Handle("/static/css/", http.StripPrefix("/static/css", fileServer))
+	mux.Handle("/static/js/", http.StripPrefix("/static/js", fileServer2))
 
 	srv := &http.Server{
 		Addr:         ":" + string(*port),
@@ -257,13 +160,12 @@ func run() {
 	log.Printf("starting server on %s", srv.Addr)
 	//https://medium.com/rungo/secure-https-servers-in-go-a783008b36da
 	// openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout converter_key.pem -out converter_cert.pem
-	err := srv.ListenAndServeTLS("./cert/converter_cert.pem", "./cert/converter_key.pem")
+	err = srv.ListenAndServeTLS("./static/cert/converter_cert.pem", "./static/cert/converter_key.pem")
 	log.Fatal(err)
 }
 
 func main() {
 	// Запуск этого чуда
-
 	// инициализируем объект планировщика
 	s := gocron.NewScheduler(time.UTC)
 
@@ -283,6 +185,5 @@ func main() {
 	s.StartAsync()
 	// запускаем планировщик с блокировкой текущего потока
 	//s.StartBlocking()
-
 	run()
 }

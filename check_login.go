@@ -20,12 +20,13 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Мы ввели:", creds.Username, creds.Password,
-		"Login:", accounts[creds.Username].Name,
+	log.Println(
+		"Мы ввели:", "[", creds.Username, creds.Password, "]",
 		"Passwd:", accounts[creds.Username].Password,
-		"Room:", accounts[creds.Username].Room,
+		"Name:", accounts[creds.Username].Name,
+		"Site:", accounts[creds.Username].Site,
 		"Phone:", accounts[creds.Username].Phone,
-		"Priveleges:", accounts[creds.Username].Privileges)
+		"Roles:", accounts[creds.Username].Roles)
 
 	// Создаём новый рандомный ключ сессии
 	sessionToken := uuid.NewString()
@@ -35,8 +36,11 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 	sessions[sessionToken] = &Session{
 		Username: creds.Username,
 		Expiry:   expiresAt,
+		Token:    sessionToken,
+		Name:     accounts[creds.Username].Name,
 	}
 	log.Println("SESSIONS:", sessions[sessionToken])
+
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",
 		Value:   sessionToken,

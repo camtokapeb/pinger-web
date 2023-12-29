@@ -3,18 +3,17 @@
 <div class="table-ping">
     <table>
         <tr> <!--ряд с ячейками заголовков-->
-        <th>№</th> <th>Время события </th> <th> IP адрес </th><th> Описание </th><th>Время ответа, ms</th>
+            <th>№</th> <th>Время события </th> <th> IP адрес </th><th> Описание </th><th>Время ответа, ms</th>
         </tr> 
         
-{{ range $key, $host := . }}
-    
-<tr> <!--ряд с ячейками тела таблицы-->
-    <td>{{$key}}</td> <td>{{ $host.Date_time}}</td> <td> {{ $host.Ip }} </td><td> {{ $host.Descriptor }} </td><td>{{$host.Time_response}} </td>
-</tr> 
-
+{{ range $key, $host := .ShowPing }}
+    <tr> <!--ряд с ячейками тела таблицы-->
+        <td>{{ $key }}</td> <td>{{ $host.Date_time }}</td> 
+        <td> {{ $host.Ip }} </td>
+        <td> {{ $host.Descriptor }} </td>
+        <td>{{$host.Time_response}} </td>
+    </tr> 
 {{ end }}
-    </table>
-
+</table>
 </div>
-
 {{ end }}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 )
@@ -12,6 +13,10 @@ type Path struct {
 func WebFormLogin(p Path) {
 
 }
+
+type тип_ключа_контекста string
+
+const ключ_контекста тип_ключа_контекста = "user_id"
 
 func МиддлеВарь(next http.HandlerFunc) http.HandlerFunc {
 	// Эта функция должна при протухшей или неверной авторизации отрисовать форму ввода логина-пароля
@@ -27,21 +32,19 @@ func МиддлеВарь(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-
+		log.Println("Идентифицирован пользователь", sessions[BrowserToken.Value])
 		// Проверяем наличие куки в локальной БД
 		if sessions[BrowserToken.Value] == nil {
 			log.Println("SESSIONS:", "нет данных о сесси с токеном:", BrowserToken.Value)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		} else {
-
 			log.Println(">>>", sessions[BrowserToken.Value])
 		}
-
-		//		UrlPath := Path{Url: r.URL.Path}
-		//		log.Println("PATH:>", BrowserToken, UrlPath)
-
-		next.ServeHTTP(w, r)
+		//log.Printf("ses: %v, %T", sessions[BrowserToken.Value], *sessions[BrowserToken.Value])
+		ctx := context.WithValue(r.Context(), ключ_контекста, *sessions[BrowserToken.Value])
+		next.ServeHTTP(w, r.WithContext(ctx))
+		//next.ServeHTTP(w, r)
 
 	}
 }

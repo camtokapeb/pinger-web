@@ -22,11 +22,12 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(
 		"Мы ввели:", "[", creds.Username, creds.Password, "]",
-		"Passwd:", accounts[creds.Username].Password,
-		"Name:", accounts[creds.Username].Name,
-		"Site:", accounts[creds.Username].Site,
-		"Phone:", accounts[creds.Username].Phone,
-		"Roles:", accounts[creds.Username].Roles)
+	//	"Passwd:", accounts[creds.Username].Password,
+	//	"Name:", accounts[creds.Username].Name,
+	//	"Site:", accounts[creds.Username].Site,
+	//	"Phone:", accounts[creds.Username].Phone,
+	//	"Roles:", accounts[creds.Username].Roles,
+	)
 
 	// Создаём новый рандомный ключ сессии
 	sessionToken := uuid.NewString()
@@ -38,6 +39,7 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 		Expiry:   expiresAt,
 		Token:    sessionToken,
 		Name:     accounts[creds.Username].Name,
+		Roles:    accounts[creds.Username].Roles,
 	}
 	log.Println("SESSIONS:", sessions[sessionToken])
 

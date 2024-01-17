@@ -1,8 +1,10 @@
-//console.log("404", "NOT FOUND!");
+
 
 function myFunction() {
-    console.log("RESIZE!!!");
+    console.log("NAVBAR, CLICK");
+    
     var x = document.getElementById("myTopnav");
+    console.log(x);
     if (x.className === "topnav") {
         x.className += " responsive";
     } else {

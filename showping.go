@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 )
 
 type Global struct {
-	Navbar   map[int]string
+	Roles    []Role
 	ShowPing []Hostes
+	Path     string
 }
 
 type Hostes struct {
@@ -21,14 +21,15 @@ type Hostes struct {
 	Time_response float64
 }
 
+// RAnge
+// https://golangify.com/template-actions-and-functions
+
 func Show_Ping(w http.ResponseWriter, r *http.Request) {
 	// страница Отрисовка таблицы web-формы
 	InfoLogger.Printf("[%s], Отрисовка cтраницы результатов пингования", r.RemoteAddr)
+
 	tmpl, err := template.ParseFiles("template/showping/show_ping.html", "template/head.html", "template/navbar.html", "template/footer.html", "template/showping/content_table.html")
-	if err != nil {
-		InfoLogger.Printf("Error parsing: %s", err)
-		fmt.Println("Error parsing test")
-	}
+	ErrLog(w, err)
 
 	query := `select
 				datetime(m.date_time, '5 hours') as TIME,
@@ -55,25 +56,38 @@ func Show_Ping(w http.ResponseWriter, r *http.Request) {
 		log.Println("IP: >>>>>>", h.Ip)
 		hs = append(hs, h)
 	}
-
+	// <a href=" {{ index .Navbar 1 }}"> wwwwww</a>
 	//h := Hostes{Date_time: "20231219", Ip: "10.228.14.1", Status: 0, Descriptor: "][peH", Time_response: 0.123}
 	//hs = append(hs, h)
 	//h = Hostes{Date_time: "20231220", Ip: "10.228.14.3", Status: 0, Descriptor: "TEH", Time_response: 0.200}
 	//hs = append(hs, h)
 
-	Data := map[int]string{}
-	Data[1] = "abc"
-	Data[2] = "def"
-	Data[3] = "ghi"
-
-	g := Global{Navbar: Data, ShowPing: hs}
-
-	log.Println("NAVBAR!!!!!:", g.Navbar[1])
-
-	tmpl.ExecuteTemplate(w, "show_ping", g)
-
+	//Data := map[int]string{}
+	//Data[1] = "abc"
+	//Data[2] = "def"
+	//Data[3] = "ghi"
 	userID, _ := (r.Context().Value(ключ_контекста).(Session))
+	g := Global{Roles: userID.Roles, ShowPing: hs, Path: r.URL.String()}
+
+	//log.Printf("NAVBAR!!!!!: %T, %v", g.Path, g.Path)
+
+	for i, value := range userID.Roles {
+
+		if value.Url == g.Path {
+
+			userID.Roles[i].ClassCSS = "active"
+			fmt.Println(i, "Url:", value.Url, "Description:", value.Description, "Template:", value.Template, "ClassCSS:", value.ClassCSS)
+		} else {
+
+			userID.Roles[i].ClassCSS = ""
+		}
+
+		//fmt.Println(userID.Roles)
+
+	}
+
 	//fmt.Println(userID)
-	io.WriteString(w, fmt.Sprintf("hello, user #%v!", userID))
+	tmpl.ExecuteTemplate(w, "show_ping", g)
+	//io.WriteString(w, fmt.Sprintf("hello, user %v", userID.Roles))
 
 }

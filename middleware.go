@@ -32,14 +32,14 @@ func МиддлеВарь(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		log.Println("Идентифицирован пользователь", sessions[BrowserToken.Value])
+
 		// Проверяем наличие куки в локальной БД
 		if sessions[BrowserToken.Value] == nil {
 			log.Println("SESSIONS:", "нет данных о сесси с токеном:", BrowserToken.Value)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		} else {
-			log.Println(">>>", sessions[BrowserToken.Value])
+			log.Println("Идентифицирован пользователь", sessions[BrowserToken.Value])
 		}
 		//log.Printf("ses: %v, %T", sessions[BrowserToken.Value], *sessions[BrowserToken.Value])
 		ctx := context.WithValue(r.Context(), ключ_контекста, *sessions[BrowserToken.Value])

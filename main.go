@@ -50,13 +50,6 @@ type Credentials struct {
 	Username string `json:"username"`
 }
 
-type Role struct {
-	//User_id     int32
-	Url         string
-	Description string
-	Template    string
-}
-
 // Каждая сессия определяется именем пользователя, временем длительности сессии и т.д.
 type Session struct {
 	Username string    // Логин, под которым вошёл пользователь
@@ -131,9 +124,9 @@ func run() {
 	createTable(DB)
 	port := flag.String("port", "8082", "TCP port")
 	flag.Parse()
-	accounts = ReadConfig()
-	config := ReadConfigFromDB()
-	log.Println("CONFIG: ", config["user1"])
+	//accounts = ReadConfig()
+	accounts = ReadConfigFromDB()
+	log.Println("CONFIG: ", accounts["user1"])
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/favicon.ico", faviconHandler)

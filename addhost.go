@@ -67,17 +67,21 @@ func addhost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Отрисовка формы ввода ip адреса
-	InfoLogger.Printf("[%s], Отрисовка login", r.RemoteAddr)
+	log.Println("Отрисовка формы добавления хоста", r.Method)
+	//	InfoLogger.Printf("[%s], Отрисовка login", r.RemoteAddr)
 	tmpl, err := template.ParseFiles(
 		"template/addhost/addhost.html",
-		"template/addhost/addhost_content.html",
+
 		"template/head.html",
 		"template/navbar.html",
+		"template/addhost/addhost_content.html",
 		"template/footer.html")
-	if err != nil {
-		InfoLogger.Printf("Error parsing: %s", err)
-	}
-	conf = Data{}
-	tmpl.ExecuteTemplate(w, "example", conf)
+
+	ErrLog(w, err)
+
+	userID, _ := (r.Context().Value(ключ_контекста).(Session))
+	g := Global{Roles: userID.Roles}
+
+	tmpl.ExecuteTemplate(w, "example", g)
 
 }

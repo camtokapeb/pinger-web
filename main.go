@@ -107,7 +107,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/favicon.ico")
 	w.WriteHeader(401)
+}
 
+func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
+	w.WriteHeader(status)
+	if status == http.StatusNotFound {
+		fmt.Fprint(w, "custom 404")
+	}
 }
 
 var DB *sql.DB
@@ -130,13 +136,15 @@ func run() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/favicon.ico", faviconHandler)
-	mux.HandleFunc("/", МиддлеВарь(Example))           // Главная страничка
+	mux.HandleFunc("/", МиддлеВарь(root))              // Главная страничка
 	mux.HandleFunc("/login", login)                    // Форма для ввода логина и пароля.
 	mux.HandleFunc("/check", checkLogin)               // Проверка логина и пароля.
 	mux.HandleFunc("/addhost", МиддлеВарь(addhost))    // Форма для добавления ip хоста
 	mux.HandleFunc("/inputnewip", МиддлеВарь(addhost)) // Добавим хост, который будем пинговать
 	mux.HandleFunc("/logout", Logout)                  // Очистить текщую сессию.
 	mux.HandleFunc("/showping", МиддлеВарь(Show_Ping)) // Таблица результатов пингования
+	mux.HandleFunc("/loadfile", МиддлеВарь(loadfile))  // Форма для загрузки файла хостов
+	mux.HandleFunc("/upload", МиддлеВарь(upload))      // Обработка загруженного файла
 
 	fileServer := http.FileServer(http.Dir("./static/css/"))
 	fileServer2 := http.FileServer(http.Dir("./static/js/"))

@@ -7,13 +7,16 @@ import (
 	"net/http"
 )
 
-func Example(w http.ResponseWriter, r *http.Request) {
+func root(w http.ResponseWriter, r *http.Request) {
 	// Главная страница Отрисовка главной формы web-формы
 
 	log.Println("EXAMPLE", sessions)
 	InfoLogger.Printf("[%s], Отрисовка login", r.RemoteAddr)
 	tmpl, err := template.ParseFiles("template/example.html", "template/head.html", "template/navbar.html", "template/content.html", "template/footer.html")
-	ErrLog(w, err)
+	if err != nil {
+		ErrLog(w, err)
+		return
+	}
 
 	userID, _ := (r.Context().Value(ключ_контекста).(Session))
 	g := Global{Roles: userID.Roles, Path: r.URL.String()}
@@ -26,6 +29,12 @@ func Example(w http.ResponseWriter, r *http.Request) {
 		} else {
 			userID.Roles[i].ClassCSS = ""
 		}
+	}
+
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		//http.Redirect(w, r, "/showping", http.StatusSeeOther)
+		return
 	}
 
 	tmpl.ExecuteTemplate(w, "example", g)

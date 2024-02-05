@@ -21,8 +21,8 @@ func Setup(w http.ResponseWriter, r *http.Request) {
 	InfoLogger.Printf("[%s], Отрисовка формы настройки OLT", r.RemoteAddr)
 	tmpl, err := template.ParseFiles("template/setup.html", "template/head.html", "template/top.html", "template/body.html", "template/footer.html")
 	if err != nil {
-		InfoLogger.Printf("Error parsing: %s", err)
-		fmt.Println("Error parsing test", err)
+		ErrLog(w, err)
+		return
 	}
 	sessions[sessionToken].Name = accounts[userSession.Username].Name
 	// Отрисовка страницы

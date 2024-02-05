@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"html/template"
 	"log"
@@ -47,7 +48,7 @@ func (host *Hosts) create(data HostParams) (*Hosts, error) {
 
 func addhost(w http.ResponseWriter, r *http.Request) {
 
-	log.Println(">>>", r.Method)
+	log.Println(">>>1111", r.Method)
 
 	switch r.Method {
 	case "GET":
@@ -71,17 +72,61 @@ func addhost(w http.ResponseWriter, r *http.Request) {
 	//	InfoLogger.Printf("[%s], Отрисовка login", r.RemoteAddr)
 	tmpl, err := template.ParseFiles(
 		"template/addhost/addhost.html",
-
 		"template/head.html",
 		"template/navbar.html",
 		"template/addhost/addhost_content.html",
 		"template/footer.html")
 
-	ErrLog(w, err)
+	log.Println("Шаблон addhost", err)
+
+	if err != nil {
+		ErrLog(w, err)
+		return
+	}
 
 	userID, _ := (r.Context().Value(ключ_контекста).(Session))
-	g := Global{Roles: userID.Roles}
+	g := Global{Roles: userID.Roles, Path: r.URL.String()}
+
+	for i, value := range userID.Roles {
+
+		if value.Url == g.Path {
+			userID.Roles[i].ClassCSS = "active"
+			//fmt.Println(i, "Url:", value.Url, "Description:", value.Description, "Template:", value.Template, "ClassCSS:", value.ClassCSS)
+		} else {
+			userID.Roles[i].ClassCSS = ""
+		}
+	}
 
 	tmpl.ExecuteTemplate(w, "example", g)
+
+}
+
+func SaveToSql(in []byte) {
+
+	myString := string(in)
+	r := csv.NewReader(strings.NewReader(myString))
+	r.Comma = ';'
+	r.Comment = '#'
+	records, err := r.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	insert := "INSERT INTO host (ip, status, descriptor) VALUES "
+
+	for i := 0; i < len(records); i++ {
+
+		item := fmt.Sprintf("('%s', 0, '%s')", records[i][0], records[i][1])
+
+		if i < (len(records) - 1) {
+			insert += item + ","
+		} else {
+			insert += item
+		}
+	}
+
+	statement, _ := DB.Prepare(insert)
+	result, err := statement.Exec()
+	log.Println("", result, "|SQL|SQL|", err)
 
 }

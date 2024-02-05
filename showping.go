@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -29,7 +28,10 @@ func Show_Ping(w http.ResponseWriter, r *http.Request) {
 	InfoLogger.Printf("[%s], Отрисовка cтраницы результатов пингования", r.RemoteAddr)
 
 	tmpl, err := template.ParseFiles("template/showping/show_ping.html", "template/head.html", "template/navbar.html", "template/footer.html", "template/showping/content_table.html")
-	ErrLog(w, err)
+	if err != nil {
+		ErrLog(w, err)
+		return
+	}
 
 	query := `select
 				datetime(m.date_time, '5 hours') as TIME,
@@ -39,7 +41,8 @@ func Show_Ping(w http.ResponseWriter, r *http.Request) {
 				printf('%.2f',m.time_response) as time_response
 				from host h right join monitoring m on h.id = m.host_id
 				where TIME > datetime('now', '-5 minutes', '5 hours')
-				order by TIME`
+				order by TIME
+				limit 0, 23`
 	s, err := Selector(DB, query)
 	if err != nil {
 		ErrorLogger.Printf("Не удалось выбрать данные из БД [%s]", err)
@@ -72,18 +75,12 @@ func Show_Ping(w http.ResponseWriter, r *http.Request) {
 	//log.Printf("NAVBAR!!!!!: %T, %v", g.Path, g.Path)
 
 	for i, value := range userID.Roles {
-
 		if value.Url == g.Path {
-
 			userID.Roles[i].ClassCSS = "active"
-			fmt.Println(i, "Url:", value.Url, "Description:", value.Description, "Template:", value.Template, "ClassCSS:", value.ClassCSS)
+			//fmt.Println(i, "Url:", value.Url, "Description:", value.Description, "Template:", value.Template, "ClassCSS:", value.ClassCSS)
 		} else {
-
 			userID.Roles[i].ClassCSS = ""
 		}
-
-		//fmt.Println(userID.Roles)
-
 	}
 
 	//fmt.Println(userID)

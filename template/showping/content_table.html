@@ -1,18 +1,38 @@
 {{ define "content_table"}}
 
 <div class="table-ping">
-    <table>
+    <table  border="1">
         <tr> <!--ряд с ячейками заголовков-->
-            <th>№</th> <th>Время события </th> <th> IP адрес </th><th> Описание </th><th>Время ответа, ms</th>
+            <th width="8%" >№</th> <th width="auto">Hostname</th>  
+            <th width="auto"> IP адрес </th>
+            <th width="auto"> Описание </th>
+            <th width="auto">Время события </th>
+            <th width="auto">Время ответа, ms</th>
         </tr> 
-        
+<!-- https://metanit.com/go/web/2.2.php -->
 {{ range $key, $host := .ShowPing }}
-    <tr> <!--ряд с ячейками тела таблицы-->
-        <td>{{ $key }}</td> <td>{{ $host.Date_time }}</td> 
-        <td> {{ $host.Ip }} </td>
-        <td> {{ $host.Descriptor }} </td>
-        <td>{{$host.Time_response}} </td>
-    </tr> 
+    <!--ряд с ячейками тела таблицы-->
+        {{ if eq $host.Status 0}}
+        <tr class="green">    
+        <td>{{ $key }}</td> 
+        <td>{{ $host.Hostname }}</td> 
+        <td>{{ $host.Ip }}</td>
+        <td>{{ $host.Descriptor }}</td>
+        <td>{{ $host.Date_time }}</td>
+        <td>{{$host.Time_response}}</td>
+        </tr>
+        {{ else }}
+        <tr class="red">
+        <td>{{ $key }}</td>
+        <td>{{ $host.Hostname }}</td> 
+        <td>{{ $host.Ip }}</td>
+        <td>{{ $host.Descriptor }}</td>
+        <td>{{ $host.Date_time }}</td>
+        <td>{{$host.Time_response}}</td>
+        </tr>
+        {{ end}}
+
+
 {{ end }}
 </table>
 </div>

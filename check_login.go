@@ -31,7 +31,7 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Создаём новый рандомный ключ сессии
 	sessionToken := uuid.NewString()
-	expiresAt := time.Now().Add(600 * time.Second)
+	expiresAt := time.Now().Add(86400 * time.Second)
 
 	// Устанавливаем токен в мапу сессий, вместе с пользователем, которого он представляет
 	sessions[sessionToken] = &Session{

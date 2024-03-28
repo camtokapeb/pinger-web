@@ -16,6 +16,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+
+	storages "pinger/v2/store"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -69,7 +71,8 @@ func MD5(data string) string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(data)))
 }
 
-// we'll use this method later to determine if the session has expired
+// Возможно, мы будем использовать этот метод позже, чтобы определить, истек ли срок действия сеанса
+// Но это не точно
 func (s *Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
 }
@@ -84,7 +87,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		// For any other type of error, return a bad request status
+		// При любом другом типе ошибки возвращаем статус неверного запроса
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -93,9 +96,9 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	sessionToken := c.Value
 	delete(sessions, sessionToken)
 
-	// We need to let the client know that the cookie is expired
-	// In the response, we set the session token to an empty
-	// value and set its expiry as the current time
+	// Нам нужно сообщить клиенту, что срок действия файла cookie истек
+	// Для этого в ответе мы присваиваем токену сеанса пустое значение
+	// и устанавливаем текущее время как срок его завершения
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",
 		Value:   "",
@@ -121,17 +124,26 @@ var err error
 
 func run() {
 
+	fmt.Println(">>>", storages.Version())
+
 	DB, err = sql.Open("sqlite3", "./base.db")
+	//DB, err = sql.Open("sqlite3", "/tmp/cache/base.db")
 	if err != nil {
 		log.Println("Ошибка подключения к БД", err.Error())
 		return
 	}
 	log.Println("Стартуем БД...")
 	createTable(DB)
+	//pingator(dataStore)
+
 	port := flag.String("port", "8082", "TCP port")
 	flag.Parse()
-	//accounts = ReadConfig()
+
+	//return
+
+	//insertDefaultData(DB)
 	accounts = ReadConfigFromDB()
+
 	log.Println("CONFIG: ", accounts["user1"])
 
 	mux := http.NewServeMux()
@@ -165,10 +177,31 @@ func run() {
 	log.Fatal(err)
 }
 
+var DataStore storages.DataStore
+var DataStore2 storages.DataStore
+
 func main() {
+
+	fmt.Println(">>>", storages.Version())
+
+	DB, err = sql.Open("sqlite3", "./base.db")
+	//DB, err = sql.Open("sqlite3", "/tmp/cache/base.db")
+	if err != nil {
+		log.Println("Ошибка подключения к БД", err.Error())
+		return
+	}
+	log.Println("Стартуем БД...")
+	createTable(DB)
+	//pingator(dataStore)
+
+	DataStore = storages.NewInMemoryDataStore()
+	DataStore2 = storages.NewInMemoryDataStore()
+
 	// Запуск этого чуда
 	// инициализируем объект планировщика
+
 	s := gocron.NewScheduler(time.UTC)
+	s2 := gocron.NewScheduler(time.UTC)
 
 	//* * * * * command(s)
 	//^ ^ ^ ^ ^
@@ -182,8 +215,10 @@ func main() {
 
 	// добавляем одну задачу на каждые 5 минут
 	s.Cron("*/5 * * * *").Do(pingator)
+	s2.Cron("*/1 * * * *").Do(readDatas)
 	// запускаем планировщик без блокировки текущего потока
 	s.StartAsync()
+	s2.StartAsync()
 	// запускаем планировщик с блокировкой текущего потока
 	//s.StartBlocking()
 	run()

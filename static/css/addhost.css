@@ -1,10 +1,99 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+  }
+
 .addhost {
-    text-align: center; 
-    width: 100%;
-    margin-left: 120;   
-    font-size: 10px;
+    float:none;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 15px;
+    width: 300px;
     font-weight: bold;
-    color: #fbfaff;  
+    font-size: 10px;
+    background-color: aqua;
+    border-radius: 10%;
+}
+
+.btn {
+    cursor: pointer;
+    margin: 5px;
+    width: 60%;
+    height: 60%;
+    padding: 5px;
+    border-radius: 6px;
+    text-align: center;
+    color:  rgb(20, 151, 99);
+    transition: background-color .3s;
+    background-color: rgb(199, 199, 199);
+    border-color: rgb(20, 151, 99);
+    font-weight: bolder;
+    font-size: clamp(10px, 5vw, 20px);
+    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.5);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.btn:hover {
+
+    cursor: pointer;
+    margin: 5px;
+    width: 60%;
+    height: 60%;
+    padding: auto;
+    border-radius: 6px;
+    opacity: 0.8;
+    text-align: center;
+    transition: background-color .3s;
+    background-color: rgb(20, 151, 99);
+    color:rgb(0, 0, 0);
+    font-weight: bolder;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
 
+input[type="text"] {
+    font-family: inherit; /* 1 */
+    font-size: inherit; /* 1 */
+    line-height: inherit; /* 1 */
+    margin: 2000; /* 2 */
+}
+
+.text-field_floating {
+    position: relative;
+
+
+}
+.text-field_floating .text-field__input {
+    height: calc(3.5rem + 2px);
+    line-height: 1.25;
+    padding: 1rem 0.75rem;
+
+}
+.text-field_floating .text-field__label {
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding: 1rem .75rem;
+    pointer-events: none;
+    border: 1px solid transparent;
+    transform-origin: 0 0;
+    transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+}
+.text-field_floating .text-field__input::-moz-placeholder {
+    color: transparent;
+}
+.text-field_floating .text-field__input::placeholder {
+    color: transparent;
+}
+.text-field_floating .text-field__input:focus,
+.text-field_floating .text-field__input:not(:placeholder-shown) {
+    padding-top: 1.625rem;
+    padding-bottom: .625rem;
+}
+.text-field_floating .text-field__input:focus~.text-field__label,
+.text-field_floating .text-field__input:not(:placeholder-shown)~.text-field__label {
+    opacity: .65;
+    transform: scale(.85) translateY(-.75rem) translateX(.15rem);
 }

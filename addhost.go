@@ -12,6 +12,7 @@ import (
 
 type Hosts struct {
 	Id         int64     `json:"id"`
+	Hostname   string    `json:"hostname"`
 	Ip         string    `json:"ip"`
 	Status     int       `json:"status"`
 	Descriptor string    `json:"descriptor"`
@@ -20,17 +21,19 @@ type Hosts struct {
 
 type HostParams struct {
 	Ip         string `json:"ip"`
+	Hostname   string `json:"hostname"`
 	Status     int    `json:"status"`
 	Descriptor string `json:"descriptor"`
 }
 
 func (host *Hosts) create(data HostParams) (*Hosts, error) {
 	var created_at = time.Now().UTC()
-	statement, _ := DB.Prepare("INSERT INTO host (ip, status, descriptor) VALUES (?, ?, ?)")
-	result, err := statement.Exec(data.Ip, data.Status, data.Descriptor)
+	statement, _ := DB.Prepare("INSERT INTO host (hostname, ip, status, descriptor) VALUES (?, ?, ?, ?)")
+	result, err := statement.Exec(data.Hostname, data.Ip, data.Status, data.Descriptor)
 	if err == nil {
 		id, _ := result.LastInsertId()
 		host.Id = int64(id)
+		host.Hostname = data.Hostname
 		host.Ip = data.Ip
 		host.Status = data.Status
 		host.Descriptor = data.Descriptor
@@ -55,15 +58,18 @@ func addhost(w http.ResponseWriter, r *http.Request) {
 		log.Println("Метод GET")
 	case "POST":
 		log.Println("Метод POST")
+		new_hostname := r.FormValue("hostname")
+		log.Println("HOSTNAME:", new_hostname)
 		new_ip := r.FormValue("ip")
 		new_desc := r.FormValue("description")
 		var params HostParams
 		var host Hosts
+		params.Hostname = new_hostname
 		params.Ip = new_ip
 		params.Descriptor = new_desc
 		_, creationError := host.create(params)
 		if creationError == nil {
-			log.Println("Добавляем новый IP:", new_ip, new_desc)
+			log.Println("Добавляем новый ХОСТ:", "hostname:", new_hostname, "new_ip:", new_ip, "new_desc:", new_desc)
 		}
 	}
 
@@ -112,11 +118,11 @@ func SaveToSql(in []byte) {
 		log.Fatal(err)
 	}
 
-	insert := "INSERT INTO host (ip, status, descriptor) VALUES "
+	insert := "INSERT INTO host (hostname, ip, status, descriptor) VALUES "
 
 	for i := 0; i < len(records); i++ {
 
-		item := fmt.Sprintf("('%s', 0, '%s')", records[i][0], records[i][1])
+		item := fmt.Sprintf("('%s', '%s', 0, '%s')", records[i][0], records[i][1], records[i][2])
 
 		if i < (len(records) - 1) {
 			insert += item + ","

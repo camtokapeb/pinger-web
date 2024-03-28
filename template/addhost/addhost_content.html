@@ -3,11 +3,22 @@
 
 <form action="/inputnewip" method="POST">
 
+
 <div class="addhost">
-    <p>Введите IPv4-адрес:</p>
-    <p><input name="ip" pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"></p>
-    <p><input name="description"></p>
-    <p><input type="submit" value="Добавить"></p>
+    
+    <div class="text-field text-field_floating">
+        <input class="text-field__input" id="hostname" name="hostname" placeholder="">
+        <label class="text-field__label" for="hostname">Hostname</label>
+    </div>
+    <div class="text-field text-field_floating">
+        <input autofocus class="text-field__input" id="ipaddr" name="ip" pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}" placeholder="" required>
+        <label class="text-field__label" for="ipaddr">IP адрес</label>
+    </div>
+    <div class="text-field text-field_floating">
+        <input class="text-field__input"  id="description"  name="description" placeholder="">
+        <label class="text-field__label" for="description">Описание</label>
+    </div>
+    <p><button class="btn" type="submit" value="upload">Добавить</button></p>
 </div>
 
 </form>

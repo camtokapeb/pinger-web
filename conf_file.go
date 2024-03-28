@@ -26,43 +26,6 @@ type Role struct {
 
 var accounts = map[string]*Users{}
 
-//var users = map[string]*Users{
-//  "user1": {Password: "password1", Name: "USER1", Room: "102", Phone: "+79126882999", Privileges: [1]},
-//	"user2": {Password: "password2", Name: "USER2", Room: "103", Phone: "+79506772999", Privileges: [2]},
-//	"user3": {Password: "password3", Name: "USER3", Room: "104", Phone: "+79506772666", Privileges: [1,2,3,4]},
-//}
-
-//func ReadConfig() map[string]*Users {
-//
-//	// Считываем файл построчно.
-//	// Файл такого типа: #PASSWORD;LOGIN;NAME;TEL;ROOM;PRIVILEGES;
-//
-//	users := make(map[string]*Users)
-//
-//	file, err := os.Open("pinger.conf")
-//	if err != nil {
-//		panic(err)
-//	}
-//	defer file.Close()
-//	reader := csv.NewReader(file)
-//	reader.FieldsPerRecord = 6
-//	reader.Comment = '#'
-//	reader.Comma = ';'
-//
-//	for {
-//		record, e := reader.Read()
-//		if e != nil {
-//			fmt.Println(e)
-//			break
-//		}
-//		//log.Println(record)
-//		dfg := []Role{{Url: "showping", Description: "Результат пингования", Template: ""}}
-//		users[record[1]] = &Users{Password: string(record[0]), Name: record[2], Phone: record[3], Site: record[4], Roles: dfg}
-//	}
-//	//log.Println("MAPS:", users["user1"])
-//	return users
-//}
-
 // Считывание конфига пользователя из базы данных
 func ReadConfigFromDB() map[string]*Users {
 
@@ -71,6 +34,8 @@ func ReadConfigFromDB() map[string]*Users {
 	// Сначала считаем всех пользователей из БД
 	query_user := `select id, login, password, email, description, phone, site from users where status = 0`
 	query_role := `select url, description, template from role where user_id = $1 order by column`
+
+	log.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 	s_user, err := Selector(DB, query_user)
 	if err != nil {
@@ -90,7 +55,7 @@ func ReadConfigFromDB() map[string]*Users {
 
 		row, err := DB.Query(query_role, u.Id)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("conf_file.go", err)
 		}
 		roles := []Role{}
 		for row.Next() {
